@@ -233,6 +233,7 @@ void BST::typeDeParametre(string ligne)
 	}
 	else if (parametreDAction == "P")
 	{
+		cout << "les elements de l'arbre dans l'ordre décroissant sont: " << endl;
 		AfficherElementsArbreDecroissant(racine);
 	}
 	else if (parametreDAction == "H")
@@ -242,7 +243,8 @@ void BST::typeDeParametre(string ligne)
 	}
 	else if (parametreDAction == "A")
 	{
-		string argument = ligne.substr(2, 1);
+		int longeur = ligne.length() - 2;
+		string argument = ligne.substr(2, ligne.length() - 2);
 		int valeur = std::stoi(argument);
 		vector<Node*> elementsAscendants;
 		elementsAscendants = AfficherAscendantsElement(valeur, racine, elementsAscendants);
@@ -254,8 +256,10 @@ void BST::typeDeParametre(string ligne)
 	}
 	else if (parametreDAction == "C")
 	{
-		string argument = ligne.substr(2, 1);
+		int longeur = ligne.length() - 2;
+		string argument = ligne.substr(2, ligne.length() - 2);
 		int valeur = std::stoi(argument);
+		cout << "les descendants de " << valeur << " sone: " << endl;
 		AfficherDescendantsElement(racine, valeur);
 	}
 	
@@ -264,17 +268,9 @@ void BST::typeDeParametre(string ligne)
 int main()
 {
 	BST* monArbre = new BST;
-	
-	vector<Node*> elements = monArbre->AfficherLesElementsNiveau(2, 0, monArbre->racine,elements);
-	monArbre-> AfficherElementsArbreDecroissant(monArbre->racine);
-	
-	Node* elementRecherche =monArbre->TrouverElementSelonValeur(11, monArbre-> racine);
-	monArbre->AfficherDescendantsElement(elementRecherche, 11);
 
-	vector<Node*> elementsAscendants;
-	elementsAscendants = monArbre->AfficherAscendantsElement(11, monArbre->racine, elementsAscendants);
-	
-	std::cout << "Hello World!\n";
+	system("PAUSE");
+	return 0;
 }
 
 
