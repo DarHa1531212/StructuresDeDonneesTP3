@@ -5,6 +5,17 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+#include <fstream>
+#include <stack>
+
+
 using namespace std;
 
 struct Node
@@ -22,20 +33,23 @@ public:
 	BST();
 	~BST();
 	void Insert(int valeur);
+	void LireFichier(string fichierAOuvrir);
+	void typeDeParametre(string ligne);
 	void TrouverPointInsertion(int donnee, Node* &elementActuel);
 	void Delete(int elementToDelete);
 	vector<Node*> AfficherLesElementsNiveau(int niveauRecherche, int niveauActuel, Node *elementActuel, vector <Node*> elementsTrouves);
 	void AfficherElementsArbreDecroissant(Node* elementActuel);
 	int AfficherHauteurArbre(Node* elementActuel, int hauteureActuelle); //done
-	void AfficherAscendantsElement(int valeurRecherchee, Node* elementActuel);
+	vector <Node*>  AfficherAscendantsElement(int valeurRecherchee, Node* elementActuel, vector <Node*> elementsTrouves);
 	void AfficherDescendantsElement(Node* elementActuel, int valeurRecherchee);
 	Node* TrouverElementSelonValeur(int elementToDelete, Node* &elementActuel);
-	int TrouverPlusGrandEnfantGauche(Node * elementASupprimer);
+	int TrouverPlusPetitEnfantDroit(Node *& elementASupprimer);
 };
 
 BST::BST()
 {
 	this->racine = NULL;
+	LireFichier("Arbre.txt");
 }
 
 void BST::TrouverPointInsertion(int donnee, Node* &elementActuel)
@@ -61,8 +75,9 @@ void BST::Delete(int valeureASupprimer)
 		noeudASupprimer = noeudASupprimer->gauche;
 	else
 	{
-		int valeur = TrouverPlusGrandEnfantGauche(noeudASupprimer);
+		int valeur = TrouverPlusPetitEnfantDroit(noeudASupprimer->droite);
 		noeudASupprimer->valeur = valeur;
+		
 	}
 	
 }
@@ -114,13 +129,19 @@ int BST::AfficherHauteurArbre(Node * elementActuel, int hauteureActuelle)
 	return 0;
 }
 
-void BST::AfficherAscendantsElement(int valeurRecherchee, Node * elementActuel)
+vector <Node*>  BST::AfficherAscendantsElement(int valeurRecherchee, Node * elementActuel, vector <Node*> elementsTrouves)
 {
 	if (valeurRecherchee < elementActuel->valeur)
 	{
-		//AM here
-		AfficherAscendantsElement(valeurRecherchee, elementActuel->gauche)
+		elementsTrouves = AfficherAscendantsElement(valeurRecherchee, elementActuel->gauche, elementsTrouves);
+		back_inserter(elementsTrouves) = elementActuel;
 	}
+	else if (valeurRecherchee > elementActuel->valeur)
+	{
+		elementsTrouves = AfficherAscendantsElement(valeurRecherchee, elementActuel->droite, elementsTrouves);
+		back_inserter(elementsTrouves) = elementActuel;
+	}
+	return elementsTrouves;
 }
 
 void BST::AfficherDescendantsElement(Node* elementActuel, int valeurRecherchee)
@@ -131,8 +152,6 @@ void BST::AfficherDescendantsElement(Node* elementActuel, int valeurRecherchee)
 		cout << elementActuel->valeur << endl;
 	AfficherDescendantsElement(elementActuel->droite, valeurRecherchee);
 	AfficherDescendantsElement(elementActuel->gauche, valeurRecherchee);
-	
-
 }
 
 Node * BST::TrouverElementSelonValeur(int elementRecherche, Node* &elementActuel)
@@ -146,15 +165,15 @@ Node * BST::TrouverElementSelonValeur(int elementRecherche, Node* &elementActuel
 	return nullptr;
 }
 
-int BST::TrouverPlusGrandEnfantGauche(Node * elementASupprimer)
+int BST::TrouverPlusPetitEnfantDroit(Node *& elementASupprimer)
 {
-	if (elementASupprimer->gauche != NULL)
+	if (elementASupprimer->droite != NULL)
 	{
-		return TrouverPlusGrandEnfantGauche(elementASupprimer->gauche);
+		return TrouverPlusPetitEnfantDroit(elementASupprimer->gauche);
 	}
-	int valeurRetoutr = elementASupprimer->valeur;
-	delete elementASupprimer;
-	return valeurRetoutr;
+	int valeurRetour = elementASupprimer->valeur;
+	elementASupprimer = NULL;
+	return valeurRetour;
 }
 
 void BST::Insert(int valeur)
@@ -162,33 +181,100 @@ void BST::Insert(int valeur)
 	TrouverPointInsertion(valeur, racine);
 }
 
+void BST::LireFichier(string fichierAOuvrir)
+{	
+	fstream entree;
+	string ligne;
+
+	entree.open(fichierAOuvrir, ios::in);
+	if (!entree.fail()) {
+		while (!entree.eof())
+		{
+			getline(entree, ligne);
+			typeDeParametre(ligne);
+		}
+	}
+	else
+	{
+		cout << "file not found" << endl;
+	}
+	entree.close();
+
+}
+	
+void BST::typeDeParametre(string ligne)
+{
+	string parametreDAction = ligne.substr(0, 1);
+
+	if (parametreDAction == "I")
+	{
+		int longeur = ligne.length() - 2;
+		string argument = ligne.substr(2, ligne.length() - 2);
+		int valeur = std::stoi(argument);
+		Insert(valeur);		
+	}
+	else if (parametreDAction == "D")
+	{
+		int longeur = ligne.length() - 2;
+		string argument = ligne.substr(2, ligne.length() - 2);
+		int valeur = std::stoi(argument);
+		Delete(valeur);
+	}
+	else if (parametreDAction == "N")
+	{
+		string argument = ligne.substr(2, 1);
+		int valeur = std::stoi(argument);
+		vector<Node*> elements = AfficherLesElementsNiveau(valeur, 0, racine, elements);
+		cout << "Les elements du niveau " << valeur << " sont:" << endl;
+		for (int i = 0; i < elements.size(); i++)
+		{
+			cout << elements[i]->valeur << endl;
+		}
+	}
+	else if (parametreDAction == "P")
+	{
+		AfficherElementsArbreDecroissant(racine);
+	}
+	else if (parametreDAction == "H")
+	{
+		cout << "profondeur de l'arbre: " << AfficherHauteurArbre(racine, 1) << endl;
+
+	}
+	else if (parametreDAction == "A")
+	{
+		string argument = ligne.substr(2, 1);
+		int valeur = std::stoi(argument);
+		vector<Node*> elementsAscendants;
+		elementsAscendants = AfficherAscendantsElement(valeur, racine, elementsAscendants);
+		cout << "Les elements ascendants à " << valeur << " sont:" << endl;
+		for (int i = 0; i < elementsAscendants.size(); i++)
+		{
+			cout << elementsAscendants[i]->valeur << endl;
+		}
+	}
+	else if (parametreDAction == "C")
+	{
+		string argument = ligne.substr(2, 1);
+		int valeur = std::stoi(argument);
+		AfficherDescendantsElement(racine, valeur);
+	}
+	
+}
+
 int main()
 {
 	BST* monArbre = new BST;
-	monArbre->Insert(5);
-	monArbre->Insert(10);
-	monArbre->Insert(9);
-	monArbre->Insert(4);
-	monArbre->Insert(11);
-	monArbre->Insert(14);
-	monArbre->Insert(13);
-	cout << "profondeur de l'arbre: " << monArbre->AfficherHauteurArbre(monArbre->racine, 1) << endl;
-	//monArbre->Delete(10);
 	
 	vector<Node*> elements = monArbre->AfficherLesElementsNiveau(2, 0, monArbre->racine,elements);
 	monArbre-> AfficherElementsArbreDecroissant(monArbre->racine);
 	
 	Node* elementRecherche =monArbre->TrouverElementSelonValeur(11, monArbre-> racine);
 	monArbre->AfficherDescendantsElement(elementRecherche, 11);
+
+	vector<Node*> elementsAscendants;
+	elementsAscendants = monArbre->AfficherAscendantsElement(11, monArbre->racine, elementsAscendants);
 	
 	std::cout << "Hello World!\n";
 }
-/*
-(x)	1. Insérer un élément donné dans cet arbre.
-(x)	2. Supprimer un élément donné de cet arbre.
-(x)	3. Afficher les éléments d’un niveau donnéen utilisant une file; la racine étant au niveau 1.
-(x) 4. Afficher les éléments de l’arbre dans l’ordre décroissant.
-(x)	5. Afficher la hauteur de cet arbre, en convenant qu’un nœud vide est de hauteur 0.
- 6. Afficher les ascendants d’un élément donné en utilisant une pile (bonus). 10%
-(x) 7. Afficher les descendants d’un élément donné.
-*/
+
+
