@@ -1,5 +1,8 @@
-// TP3.cpp : Ce fichier contient la fonction 'main'. L'exécution du programme commence et se termine à cet endroit.
-//
+/************************************************************
+*	Nom: Hans Darmstadt-Bélanger							*
+*	Date: 14 Décembre 2018									*
+*	But: Créer un programme qui construit et gère un ABR	*
+*************************************************************/
 
 #include "pch.h"
 #include <iostream>
@@ -15,9 +18,11 @@
 #include <fstream>
 #include <stack>
 
-
 using namespace std;
 
+/// <summary>
+/// La structure Noeud contient une valeur et un pointeur vers les Node droite et gauche suivantes
+/// </summary>
 struct Node
 {
 	int valeur;
@@ -25,17 +30,18 @@ struct Node
 	Node* gauche;
 };
 
+/// <summary>
+/// La classe BST représente l'arbre binaire de recherche et contient toutes les fonctions qui traitent à l'arbre
+/// </summary>
 class BST
 {
 public:
 	Node* racine;
 	vector<Node> elementsProfondeur;
 	BST();
-	~BST();
-	void Insert(int valeur);
+	void Insert(int valeur, Node * &elementActuel);
 	void LireFichier(string fichierAOuvrir);
 	void typeDeParametre(string ligne);
-	void TrouverPointInsertion(int donnee, Node* &elementActuel);
 	void Delete(int elementToDelete);
 	vector<Node*> AfficherLesElementsNiveau(int niveauRecherche, int niveauActuel, Node *elementActuel, vector <Node*> elementsTrouves);
 	void AfficherElementsArbreDecroissant(Node* elementActuel);
@@ -46,25 +52,19 @@ public:
 	int TrouverPlusPetitEnfantDroit(Node *& elementASupprimer);
 };
 
+/// <summary>
+/// Initialise une nouvelle instance de la classe <see cref="BST"/> 
+/// </summary>
 BST::BST()
 {
 	this->racine = NULL;
 	LireFichier("Arbre.txt");
 }
 
-void BST::TrouverPointInsertion(int donnee, Node* &elementActuel)
-{
-	if (elementActuel == NULL)
-	{
-		elementActuel = new Node();
-		elementActuel->valeur = donnee;
-	}
-	else if (donnee < elementActuel->valeur)
-		TrouverPointInsertion(donnee, elementActuel->gauche);
-	else if (donnee > elementActuel->valeur)
-		TrouverPointInsertion(donnee, elementActuel->droite);
-}
-
+/// <summary>
+/// Supprime une valeur de l'arbre selon la valeur à supprimer.
+/// </summary>
+/// <param name="valeureASupprimer">La valeur à supprimer.</param>
 void BST::Delete(int valeureASupprimer)
 {
 	Node *noeudASupprimer = TrouverElementSelonValeur(valeureASupprimer, racine);
@@ -77,11 +77,18 @@ void BST::Delete(int valeureASupprimer)
 	{
 		int valeur = TrouverPlusPetitEnfantDroit(noeudASupprimer->droite);
 		noeudASupprimer->valeur = valeur;
-		
 	}
 	
 }
 
+/// <summary>
+/// Affichers les elements d'un niveau donné.
+/// </summary>
+/// <param name="niveauRecherche">Le niveau recherché.</param>
+/// <param name="niveauActuel">Le niveau actuellement atteint avec le parcour récursif de l'arbre.</param>
+/// <param name="elementActuel">L'élément actuellement atteint par le parcour.</param>
+/// <param name="elementsTrouves">La liste des éléments trouvés au niveau recherché.</param>
+/// <returns>La liste des éléments trouvés qui est mise à jour si l'élément actuel est du niveau recherché.</returns>
 vector<Node*> BST::AfficherLesElementsNiveau(int niveauRecherche, int niveauActuel, Node * elementActuel, vector<Node*> elementsTrouves)
 {
 	if (elementActuel != NULL)
@@ -100,6 +107,10 @@ vector<Node*> BST::AfficherLesElementsNiveau(int niveauRecherche, int niveauActu
 	return elementsTrouves;
 }
 
+/// <summary>
+/// Affichers les elements de l'arbre en ordre decroissant.
+/// </summary>
+/// <param name="elementActuel">L'element actuel.</param>
 void BST::AfficherElementsArbreDecroissant(Node * elementActuel)
 {
 	if (elementActuel == NULL)
@@ -109,6 +120,12 @@ void BST::AfficherElementsArbreDecroissant(Node * elementActuel)
 	AfficherElementsArbreDecroissant(elementActuel->gauche);
 }
 
+/// <summary>
+/// Affiche la hauteur de arbre.
+/// </summary>
+/// <param name="elementActuel">L'element actuel.</param>
+/// <param name="hauteureActuelle">La hauteure actuellement atteinte par le parcour récursif de l'arbre.</param>
+/// <returns>Retourne la plus grande profondeur trouvée en comparant les profondeurs des sous-arbres droits et gauches</returns>
 int BST::AfficherHauteurArbre(Node * elementActuel, int hauteureActuelle)
 {
 	if (elementActuel != NULL)
@@ -129,6 +146,13 @@ int BST::AfficherHauteurArbre(Node * elementActuel, int hauteureActuelle)
 	return 0;
 }
 
+/// <summary>
+/// Affiche les ascendants d'un element.
+/// </summary>
+/// <param name="valeurRecherchee">La valeur recherchée.</param>
+/// <param name="elementActuel">L'element actuel.</param>
+/// <param name="elementsTrouves">La liste des éléments trouvée.</param>
+/// <returns>La liste des éléments trouvés mis à jour </returns>
 vector <Node*>  BST::AfficherAscendantsElement(int valeurRecherchee, Node * elementActuel, vector <Node*> elementsTrouves)
 {
 	if (valeurRecherchee < elementActuel->valeur)
@@ -144,6 +168,11 @@ vector <Node*>  BST::AfficherAscendantsElement(int valeurRecherchee, Node * elem
 	return elementsTrouves;
 }
 
+/// <summary>
+/// Affiche les descendants d'un element.
+/// </summary>
+/// <param name="elementActuel">L'element actuel.</param>
+/// <param name="valeurRecherchee">La valeur recherchée.</param>
 void BST::AfficherDescendantsElement(Node* elementActuel, int valeurRecherchee)
 {
 	if (elementActuel == NULL)
@@ -154,6 +183,12 @@ void BST::AfficherDescendantsElement(Node* elementActuel, int valeurRecherchee)
 	AfficherDescendantsElement(elementActuel->gauche, valeurRecherchee);
 }
 
+/// <summary>
+/// Trouve un element selon sa valeur.
+/// </summary>
+/// <param name="elementRecherche">La valeur de l'element recherché</param>
+/// <param name="elementActuel">L'element actuellement atteint par le parcour récursif de l'arbre.</param>
+/// <returns>Un pointeur vers l'element recherché.</returns>
 Node * BST::TrouverElementSelonValeur(int elementRecherche, Node* &elementActuel)
 {
 	if (elementActuel->valeur == elementRecherche)
@@ -165,22 +200,44 @@ Node * BST::TrouverElementSelonValeur(int elementRecherche, Node* &elementActuel
 	return nullptr;
 }
 
-int BST::TrouverPlusPetitEnfantDroit(Node *& elementASupprimer)
+/// <summary>
+/// Trouve le plus petit enfant droit d'un élément.
+/// </summary>
+/// <param name="elementActuel">L'élément dont on cherche le plus petit enfant droit.</param>
+/// <returns>La valeur du plus petit enfant droit.</returns>
+int BST::TrouverPlusPetitEnfantDroit(Node *& elementActuel)
 {
-	if (elementASupprimer->droite != NULL)
+	if (elementActuel->droite != NULL)
 	{
-		return TrouverPlusPetitEnfantDroit(elementASupprimer->gauche);
+		return TrouverPlusPetitEnfantDroit(elementActuel->gauche);
 	}
-	int valeurRetour = elementASupprimer->valeur;
-	elementASupprimer = NULL;
+	int valeurRetour = elementActuel->valeur;
+	elementActuel = NULL;
 	return valeurRetour;
 }
 
-void BST::Insert(int valeur)
+/// <summary>
+/// Insert la valeur spéciffiée dans l'arbre.
+/// </summary>
+/// <param name="valeur">La valeur à insérer.</param>
+/// <param name="elementActuel">L'élément actuellement atteint par le parcour de l'arbre.</param>
+void BST::Insert(int valeur, Node * &elementActuel)
 {
-	TrouverPointInsertion(valeur, racine);
+	if (elementActuel == NULL)
+	{
+		elementActuel = new Node();
+		elementActuel->valeur = valeur;
+	}
+	else if (valeur< elementActuel->valeur)
+		Insert(valeur, elementActuel->gauche);
+	else if (valeur > elementActuel->valeur)
+		Insert(valeur, elementActuel->droite);
 }
 
+/// <summary>
+/// Lis le fichier en boucle jusqu'à en atteindre la fin.
+/// </summary>
+/// <param name="fichierAOuvrir">Le fichier à ouvrir.</param>
 void BST::LireFichier(string fichierAOuvrir)
 {	
 	fstream entree;
@@ -202,6 +259,10 @@ void BST::LireFichier(string fichierAOuvrir)
 
 }
 	
+/// <summary>
+/// Appelle la fonction pertinante selon la ligne d'action lue dans le fichier
+/// </summary>
+/// <param name="ligne">La ligne lue.</param>
 void BST::typeDeParametre(string ligne)
 {
 	string parametreDAction = ligne.substr(0, 1);
@@ -211,7 +272,7 @@ void BST::typeDeParametre(string ligne)
 		int longeur = ligne.length() - 2;
 		string argument = ligne.substr(2, ligne.length() - 2);
 		int valeur = std::stoi(argument);
-		Insert(valeur);		
+		Insert(valeur, racine);		
 	}
 	else if (parametreDAction == "D")
 	{
@@ -259,12 +320,17 @@ void BST::typeDeParametre(string ligne)
 		int longeur = ligne.length() - 2;
 		string argument = ligne.substr(2, ligne.length() - 2);
 		int valeur = std::stoi(argument);
+		Node* elementRecherche = TrouverElementSelonValeur(valeur, racine);
 		cout << "les descendants de " << valeur << " sone: " << endl;
-		AfficherDescendantsElement(racine, valeur);
+		AfficherDescendantsElement(elementRecherche, valeur);
 	}
 	
 }
 
+/// <summary>
+/// Le point d'entrée du programme.
+/// </summary>
+/// <returns>0 en cas d'execution normale du programme</returns>
 int main()
 {
 	BST* monArbre = new BST;
